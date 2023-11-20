@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from config.db import db, app, ma
 from models.publication import Publication, PublicationSchema
+from models.user import User, UserSchema
 from utils.general_response import success, error
 
 route_publications = Blueprint("route_publications", __name__)
@@ -8,10 +9,22 @@ route_publications = Blueprint("route_publications", __name__)
 publication_schema = PublicationSchema()
 publications_schema = PublicationSchema(many=True)
 
+user_schema = UserSchema()
+
 @route_publications.route('/publications', methods=['GET'])
 def publication():
     user_id = request.args.get('user_id')
+    publication_id = request.args.get('publication_id')
+    if publication_id:
+        #informacion detallada de publication y publicador
+        result = db.session.query(Publication, User).\
+            select_from(Publication).join(User).filter(Publication.id==publication_id).first()
+        publication = publication_schema.dump(result[0])
+        user = user_schema.dump(result[1])
+        publication['user_info'] = user
+        return success(publication, True, 200) 
     if user_id is not None:
+        # Mis Publicaciones
         result = Publication.query.filter_by(user=user_id).all()
         publications = publications_schema.dump(result)
         return success(publications, True, 200)

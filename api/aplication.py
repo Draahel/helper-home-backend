@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from config.db import db, app, ma
 from models.aplication import Aplication, AplicationSchema
+from models.stage import Stage, StageSchema
 from utils.general_response import success, error
 from sqlalchemy.sql import and_
 
@@ -9,23 +10,34 @@ route_aplications = Blueprint("route_aplications", __name__)
 aplication_schema = AplicationSchema()
 aplications_schema = AplicationSchema(many=True)
 
+stages_schema = StageSchema(many=True)
+stage_schema = StageSchema()
+
 @route_aplications.route('/aplications', methods=['GET'])
 def aplication():
     user_id = request.args.get('user_id')
     publication_id = request.args.get('publication_id')
-    if user_id or publication_id:
-        if user_id and publication_id:
-            result = Aplication.query.filter(Aplication.user==user_id, Aplication.id==publication_id).all()
-        elif user_id:
-            result = Aplication.query.filter_by(user=user_id).all()
-        elif publication_id:
-            result = Aplication.query.filter_by(id=publication_id).all()
-        aplications = aplications_schema.dump(result)
-        return success(aplications, True, 200)
-        
-    resultall = Aplication.query.all()
-    result_aplication = aplications_schema.dump(resultall)
-    return success(result_aplication, True, 200)
+    if user_id and publication_id:
+        # Datos especificos si el usuario realizo una solicitud a la publicacion (caso obtener informacion completa de la solicitud)
+        result = Aplication.query.filter(Aplication.user==user_id, Aplication.id==publication_id).first()
+        if not result: return error("Aplication not found",404)
+        aplication = aplication_schema.dump(result)
+        resultStages = Stage.query.filter_by(aplication=aplication['id']).all()
+        stages = stages_schema.dump(resultStages)
+        aplication['stages'] = stages
+        return success(aplication, True, 200)
+    elif user_id:
+        # Retorna datos de las solicitudes hechas por un usuario (caso usuario visualiza las solicitus realizadas)
+        result = Aplication.query.filter_by(user=user_id).all()
+    elif publication_id:
+        # Retorna todas las solicitudes hecha a una publicacion (Caso creador puede ver quien aplica)
+        result = Aplication.query.filter_by(id=publication_id).all()
+    else:
+        #Retorna todas las soliciatudes hechas
+        result = Aplication.query.all()
+
+    aplications = aplications_schema.dump(result)
+    return success(aplications, True, 200)
 
 @route_aplications.route('/saveaplication', methods=['POST'])
 def save():

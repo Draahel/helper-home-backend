@@ -1,12 +1,14 @@
 from config.db import app
 
-from api.type import Type, route_types
-from api.user import User, route_users
-from api.account import Account, route_accounts
+from api.type import route_types
+from api.user import route_users
+from api.account import route_accounts
+from api.publication import route_publications
 
 app.register_blueprint(route_types, url_prefix = '/api')
 app.register_blueprint(route_users, url_prefix = '/api')
 app.register_blueprint(route_accounts, url_prefix = '/api')
+app.register_blueprint(route_publications, url_prefix = '/api')
 
 
 @app.route('/api')

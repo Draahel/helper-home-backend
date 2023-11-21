@@ -77,11 +77,26 @@ def Update():
 
     aplication_update = Aplication.query.get(id)
     if aplication_update:
+        aplication = aplication_schema.dump(aplication_update)
         aplication_update.state = state
         aplication_update.last_stage = last_stage
         aplication_update.cancel_date = cancel_date
         db.session.commit()
-        aplication = aplication_schema.dump(aplication_update)
+        if not aplication['last_stage'] == last_stage:
+            stage = Stage.query.filter_by(aplication=id, is_current=True).first()
+            stage.is_current = False
+            new_stage = Stage(
+                aplication['id'],
+                last_stage,
+                True,
+                DateTime.today()
+            )
+            db.session.add(new_stage)
+            db.session.commit()
+            result = Stage.query.filter_by(aplication=id).all()
+            stages = stages_schema.dump(result)
+            aplication = aplication_schema.dump(aplication_update)
+            aplication['stages'] = stages
         return success(aplication, True, 200)
     else:
         return error("Couldn't find aplication", 402)

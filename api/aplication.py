@@ -3,7 +3,7 @@ from config.db import db, app, ma
 from models.aplication import Aplication, AplicationSchema
 from models.stage import Stage, StageSchema
 from utils.general_response import success, error
-from sqlalchemy.sql import and_
+from datetime import date as DateTime
 
 route_aplications = Blueprint("route_aplications", __name__)
 
@@ -52,6 +52,19 @@ def save():
     db.session.add(new_aplication)
     db.session.commit()
     aplication = aplication_schema.dump(new_aplication)
+
+    new_stage = Stage(
+        aplication['id'],
+        'RESENT',
+        True,
+        DateTime.today()
+    )
+    db.session.add(new_stage)
+    db.session.commit()
+    
+    stages = stage_schema.dump(new_stage)
+    aplication['stages'] = [stages]
+
     return success(aplication, True, 200)
 
 

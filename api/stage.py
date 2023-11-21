@@ -22,10 +22,11 @@ def stage():
 @route_stages.route('/savestage', methods=['POST'])
 def save():
     aplication = request.json['aplication']
+    name = request.json['name']
     is_current = True
     date = DateTime.today()
 
-    new_stage = Stage(aplication, is_current, date)
+    new_stage = Stage(aplication, name, is_current, date)
     db.session.add(new_stage)
     db.session.commit()
     return success(stage_schema.dump(new_stage), True, 202)
@@ -35,9 +36,11 @@ def save():
 def Update():
     id = request.json['id']
     is_current = request.json['is_current']
+    name = request.json['name']
     stage_update = Stage.query.get(id)
     if stage_update:
         stage_update.is_current = is_current
+        stage_update.name = name
         db.session.commit()
         return success(stage_schema.dump(stage_update), True, 200)
     else:

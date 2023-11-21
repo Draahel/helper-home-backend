@@ -43,10 +43,10 @@ def aplication():
 def save():
     user = request.json['user']
     publication = request.json['publication']
-    date = request.json['date']
-    state = request.json['state']
-    last_stage = request.json['last_stage']
-    cancel_date = None if not request.json['cancel_date'] else request.json['cancel_date']
+    date = DateTime.today()
+    state = 1
+    last_stage = 'RESENT'
+    cancel_date = None
     
     new_aplication = Aplication(user,  publication, date, state, last_stage, cancel_date)
     db.session.add(new_aplication)
